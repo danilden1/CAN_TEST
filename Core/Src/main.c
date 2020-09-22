@@ -41,6 +41,7 @@
 
 /* Private variables ---------------------------------------------------------*/
 CAN_HandleTypeDef hcan1;
+CAN_HandleTypeDef hcan3;
 
 /* USER CODE BEGIN PV */
 
@@ -58,17 +59,18 @@ uint32_t              TxMailbox;
 void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
 static void MX_CAN1_Init(void);
+static void MX_CAN3_Init(void);
 /* USER CODE BEGIN PFP */
 static void LED_Display(int LedStatus);
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-int ftx = 0x245;
-int frx = 0x244;
-
 //int ftx = 0x244;
 //int frx = 0x245;
+
+int ftx = 0x244;
+int frx = 0x245;
 
 /* USER CODE END 0 */
 
@@ -103,6 +105,7 @@ int main(void)
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
   MX_CAN1_Init();
+  MX_CAN3_Init();
   /* USER CODE BEGIN 2 */
   TxData[0] = ftx;
   TxData[1] = 0xAD;
@@ -130,7 +133,7 @@ int main(void)
 	          TxData[1] = 0xAD;
 
 	          /* Start the Transmission process */
-	          if (HAL_CAN_AddTxMessage(&hcan1, &TxHeader, TxData, &TxMailbox) != HAL_OK)
+	          if (HAL_CAN_AddTxMessage(&hcan3, &TxHeader, TxData, &TxMailbox) != HAL_OK)
 	          {
 	            /* Transmission request Error */
 	            Error_Handler();
@@ -276,6 +279,82 @@ static void MX_CAN1_Init(void)
 }
 
 /**
+  * @brief CAN3 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_CAN3_Init(void)
+{
+
+  /* USER CODE BEGIN CAN3_Init 0 */
+
+  /* USER CODE END CAN3_Init 0 */
+
+  /* USER CODE BEGIN CAN3_Init 1 */
+
+  /* USER CODE END CAN3_Init 1 */
+  hcan3.Instance = CAN3;
+  hcan3.Init.Prescaler = 21;
+  hcan3.Init.Mode = CAN_MODE_NORMAL;
+  hcan3.Init.SyncJumpWidth = CAN_SJW_1TQ;
+  hcan3.Init.TimeSeg1 = CAN_BS1_12TQ;
+  hcan3.Init.TimeSeg2 = CAN_BS2_4TQ;
+  hcan3.Init.TimeTriggeredMode = DISABLE;
+  hcan3.Init.AutoBusOff = DISABLE;
+  hcan3.Init.AutoWakeUp = DISABLE;
+  hcan3.Init.AutoRetransmission = DISABLE;
+  hcan3.Init.ReceiveFifoLocked = DISABLE;
+  hcan3.Init.TransmitFifoPriority = DISABLE;
+  if (HAL_CAN_Init(&hcan3) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN CAN3_Init 2 */
+  /*##-2- Configure the CAN Filter ###########################################*/
+  CAN_FilterTypeDef  sFilterConfig;
+    sFilterConfig.FilterBank = 0;
+    sFilterConfig.FilterMode = CAN_FILTERMODE_IDMASK;
+    sFilterConfig.FilterScale = CAN_FILTERSCALE_32BIT;
+    sFilterConfig.FilterIdHigh = 0x0000;
+    sFilterConfig.FilterIdLow = 0x0000;
+    sFilterConfig.FilterMaskIdHigh = 0x0000;
+    sFilterConfig.FilterMaskIdLow = 0x0000;
+    sFilterConfig.FilterFIFOAssignment = CAN_RX_FIFO0;
+    sFilterConfig.FilterActivation = ENABLE;
+    sFilterConfig.SlaveStartFilterBank = 14;
+
+    if (HAL_CAN_ConfigFilter(&hcan3, &sFilterConfig) != HAL_OK)
+    {
+      /* Filter configuration Error */
+      Error_Handler();
+    }
+
+    /*##-3- Start the CAN peripheral ###########################################*/
+    if (HAL_CAN_Start(&hcan3) != HAL_OK)
+    {
+      /* Start Error */
+      Error_Handler();
+    }
+
+    /*##-4- Activate CAN RX notification #######################################*/
+    if (HAL_CAN_ActivateNotification(&hcan3, CAN_IT_RX_FIFO0_MSG_PENDING) != HAL_OK)
+    {
+      /* Notification Error */
+      Error_Handler();
+    }
+
+    /*##-5- Configure Transmission process #####################################*/
+    TxHeader.StdId = ftx;
+    TxHeader.ExtId = 0x01;
+    TxHeader.RTR = CAN_RTR_DATA;
+    TxHeader.IDE = CAN_ID_STD;
+    TxHeader.DLC = 2;
+    TxHeader.TransmitGlobalTime = DISABLE;
+  /* USER CODE END CAN3_Init 2 */
+
+}
+
+/**
   * @brief GPIO Initialization Function
   * @param None
   * @retval None
@@ -385,7 +464,7 @@ static void MX_GPIO_Init(void)
 void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan)
 {
   /* Get RX message */
-  if (HAL_CAN_GetRxMessage(&hcan1, CAN_RX_FIFO0, &RxHeader, RxData) != HAL_OK)
+  if (HAL_CAN_GetRxMessage(&hcan3, CAN_RX_FIFO0, &RxHeader, RxData) != HAL_OK)
   {
     /* Reception Error */
     Error_Handler();

@@ -67,6 +67,9 @@ static void LED_Display(int LedStatus);
 int ftx = 0x245;
 int frx = 0x244;
 
+//int ftx = 0x244;
+//int frx = 0x245;
+
 /* USER CODE END 0 */
 
 /**

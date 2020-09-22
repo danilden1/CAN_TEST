@@ -50,7 +50,7 @@ CAN_TxHeaderTypeDef   TxHeader;
 CAN_RxHeaderTypeDef   RxHeader;
 uint8_t               TxData[8];
 uint8_t               RxData[8];
-uint32_t              TxMailbox = 0;
+uint32_t              TxMailbox;
 
 /* USER CODE END PV */
 
@@ -64,8 +64,8 @@ static void LED_Display(int LedStatus);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-int ftx = 0x244;
-int frx = 0x245;
+int ftx = 0x245;
+int frx = 0x244;
 
 /* USER CODE END 0 */
 
